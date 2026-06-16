@@ -17,11 +17,43 @@ let siteData      = null;
    GASリクエスト
    ================================================ */
 async function gasPost(payload) {
-  const form = new FormData();
-  form.append('payload', JSON.stringify({ ...payload, token: SESSION_TOKEN }));
-  const res  = await fetch(GAS_URL, { method: 'POST', body: form });
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return { result:'success' }; }
+  const body = JSON.stringify({ ...payload, token: SESSION_TOKEN });
+
+  // まずapplication/jsonで試みる
+  try {
+    const res  = await fetch(GAS_URL, {
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain' }, // GASはtext/plainをJSON化せずそのまま受け取る
+      body:     body,
+      redirect: 'follow',
+    });
+    const text = await res.text();
+    if (text) {
+      try { return JSON.parse(text); } catch(e) {}
+    }
+  } catch(e) {}
+
+  // フォールバック: FormData
+  try {
+    const form = new FormData();
+    form.append('payload', body);
+    const res2  = await fetch(GAS_URL, { method: 'POST', body: form, redirect: 'follow' });
+    const text2 = await res2.text();
+    if (text2) {
+      try { return JSON.parse(text2); } catch(e) {}
+    }
+  } catch(e) {}
+
+  // 最終フォールバック: GETにパラメータを付けて送信
+  try {
+    const res3  = await fetch(`${GAS_URL}?payload=${encodeURIComponent(body)}`);
+    const text3 = await res3.text();
+    if (text3) {
+      try { return JSON.parse(text3); } catch(e) {}
+    }
+  } catch(e) {}
+
+  throw new Error('サーバーへの接続に失敗しました。時間をおいて再試行してください。');
 }
 
 /* ================================================
@@ -75,11 +107,17 @@ function setupLogin() {
   const saved = sessionStorage.getItem('member_token');
   const info  = sessionStorage.getItem('member_info');
   if (saved && info) {
-    SESSION_TOKEN = saved;
-    MEMBER_INFO   = JSON.parse(info);
-    loginScreen.hidden  = true;
-    memberScreen.hidden = false;
-    memberInit();
+    try {
+      SESSION_TOKEN = saved;
+      MEMBER_INFO   = JSON.parse(info);
+      loginScreen.hidden  = true;
+      memberScreen.hidden = false;
+      memberInit();
+    } catch(e) {
+      // セッション情報が壊れていたらクリア
+      sessionStorage.removeItem('member_token');
+      sessionStorage.removeItem('member_info');
+    }
   }
 
   loginForm.addEventListener('submit', async (e) => {
@@ -94,6 +132,7 @@ function setupLogin() {
 
     try {
       const json = await gasPost({ action: 'memberLogin', email, password });
+      if (!json) throw new Error('サーバーから応答がありませんでした');
       if (json.result === 'success') {
         SESSION_TOKEN = json.token;
         MEMBER_INFO   = { name: json.name, email: json.email, row: json.row };
@@ -103,12 +142,13 @@ function setupLogin() {
         memberScreen.hidden = false;
         memberInit();
       } else {
-        loginError.hidden     = false;
+        loginError.hidden      = false;
         loginError.textContent = json.message || 'ログインに失敗しました';
       }
     } catch (err) {
-      loginError.hidden     = false;
-      loginError.textContent = '接続エラーが発生しました';
+      console.error('ログインエラー:', err);
+      loginError.hidden      = false;
+      loginError.textContent = err.message || '接続エラーが発生しました';
     } finally {
       submitBtn.disabled    = false;
       submitBtn.textContent = 'ログイン';
@@ -126,14 +166,19 @@ function setupLogin() {
    会員画面初期化
    ================================================ */
 async function memberInit() {
-  // 名前表示
   const nameEl = document.getElementById('member-name-display');
   if (nameEl && MEMBER_INFO) nameEl.textContent = MEMBER_INFO.name + ' さん';
 
   setupTabs();
   setupDeleteModal();
 
-  siteData = await loadData();
+  try {
+    siteData = await loadData();
+  } catch(e) {
+    siteData = null;
+  }
+  if (!siteData) siteData = { news: [], schedule: [], recruit: { open: true } };
+
   renderMemberNews(siteData.news || []);
   renderMemberSchedule(siteData.schedule || []);
   renderJoinList(siteData.schedule || []);
@@ -142,7 +187,6 @@ async function memberInit() {
   setupNotifyModal();
   setupPasswordForm();
 
-  // 企画者メールのデフォルト値を設定
   const orgEmail = document.getElementById('schedule-organizer-email');
   if (orgEmail && MEMBER_INFO) orgEmail.value = MEMBER_INFO.email;
 }
