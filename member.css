@@ -1,0 +1,131 @@
+/* ================================================
+   会員ページ — member.css
+   ================================================ */
+.member-note {
+  font-size: 0.8rem;
+  color: #5a4e3c;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(181,134,30,0.08);
+  border-left: 3px solid #b5861e;
+  border-radius: 2px;
+}
+.form-note {
+  font-size: 0.82rem;
+  color: #4a6741;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(74,103,65,0.08);
+  border-left: 3px solid #4a6741;
+  border-radius: 2px;
+}
+
+/* 参加ボタン */
+.btn-join {
+  background: #4a6741;
+  color: #fff;
+  border-color: #4a6741;
+}
+.btn-join:hover { background: #3a5233; border-color: #3a5233; }
+.btn-joined {
+  background: #e8e0d0;
+  color: #5a4e3c;
+  border-color: #c0b090;
+  cursor: default;
+}
+
+/* 参加者数バッジ */
+.participant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.75rem;
+  color: #4a6741;
+  background: rgba(74,103,65,0.1);
+  border-radius: 20px;
+  padding: 0.2em 0.7em;
+  margin-top: 0.4rem;
+}
+
+/* 自分の投稿バッジ */
+.my-post-badge {
+  font-size: 0.65rem;
+  background: #b5861e;
+  color: #fff;
+  border-radius: 2px;
+  padding: 0.1em 0.5em;
+  margin-left: 0.5em;
+}
+
+/* イベントカード（参加タブ） */
+.join-item {
+  background: #fff;
+  border: 1px solid rgba(26,18,8,0.1);
+  border-radius: 6px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(26,18,8,0.04);
+  margin-bottom: 0.75rem;
+}
+.join-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.join-item-info { flex: 1; }
+.join-item-date {
+  font-size: 0.8rem;
+  color: #5a4e3c;
+  font-family: Georgia, serif;
+  margin-bottom: 0.3rem;
+}
+.join-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1208;
+  margin-bottom: 0.3rem;
+}
+.join-item-location {
+  font-size: 0.82rem;
+  color: #4a6741;
+  margin-bottom: 0.3rem;
+}
+.join-item-detail {
+  font-size: 0.82rem;
+  color: #5a4e3c;
+  line-height: 1.7;
+}
+.join-item-organizer {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.4rem;
+}
+
+/* パスワード表示/非表示 */
+.pass-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pass-input-wrap input {
+  flex: 1;
+  padding-right: 2.8rem !important;
+}
+.pass-toggle-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  font-size: 1rem;
+}
+.pass-toggle-btn:hover { opacity: 1; }
+.pass-toggle-btn.active { opacity: 1; }
+.pass-toggle-btn.active .eye-icon::after { content: '🔒'; }

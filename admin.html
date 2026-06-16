@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者ページ | 街の語り部</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- ログイン画面 -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <svg class="login-mon" viewBox="0 0 60 60" aria-hidden="true">
+        <circle cx="30" cy="30" r="28" fill="none" stroke="#b5861e" stroke-width="1.5"/>
+        <ellipse cx="30" cy="16" rx="4" ry="7" fill="#b5861e" opacity="0.85"/>
+        <ellipse cx="21" cy="20" rx="3.5" ry="6" fill="#b5861e" opacity="0.7" transform="rotate(-18 21 20)"/>
+        <ellipse cx="39" cy="20" rx="3.5" ry="6" fill="#b5861e" opacity="0.7" transform="rotate(18 39 20)"/>
+        <ellipse cx="30" cy="34" rx="7" ry="4" fill="#b5861e" opacity="0.6"/>
+        <ellipse cx="22" cy="38" rx="5.5" ry="3" fill="#b5861e" opacity="0.5" transform="rotate(-12 22 38)"/>
+        <ellipse cx="38" cy="38" rx="5.5" ry="3" fill="#b5861e" opacity="0.5" transform="rotate(12 38 38)"/>
+        <ellipse cx="30" cy="46" rx="4" ry="5.5" fill="#b5861e" opacity="0.4"/>
+      </svg>
+      <h1>街の語り部<br><span>管理者ページ</span></h1>
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="admin-pass">管理者パスワード</label>
+          <input type="password" id="admin-pass" placeholder="パスワードを入力" required autocomplete="current-password">
+        </div>
+        <p id="login-error" class="login-error" hidden>パスワードが違います</p>
+        <button type="submit" class="btn btn-primary" style="width:100%">ログイン</button>
+      </form>
+      <a href="index.html" class="back-link">← サイトトップに戻る</a>
+    </div>
+  </div>
+
+  <!-- 管理画面本体 -->
+  <div id="admin-screen" class="admin-screen" hidden>
+    <header class="admin-header">
+      <div class="admin-header-inner">
+        <h1>街の語り部 — 管理パネル</h1>
+        <div class="admin-header-actions">
+          <a href="index.html" class="btn btn-outline btn-sm" target="_blank">サイトを見る</a>
+          <button class="btn btn-outline btn-sm" id="logout-btn">ログアウト</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <!-- タブ -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="news">お知らせ管理</button>
+        <button class="admin-tab" data-tab="schedule">スケジュール管理</button>
+        <button class="admin-tab" data-tab="members">会員一覧</button>
+      </div>
+
+      <!-- お知らせ管理 -->
+      <section class="admin-panel active" id="tab-news">
+        <div class="panel-toolbar">
+          <h2>お知らせ・活動報告</h2>
+          <button class="btn btn-primary btn-sm" id="news-add-btn">＋ 新規追加</button>
+        </div>
+
+        <!-- 追加・編集フォーム -->
+        <div class="admin-form-card" id="news-form-card" hidden>
+          <h3 id="news-form-title">新規お知らせ</h3>
+          <form id="news-form">
+            <input type="hidden" id="news-edit-id">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="news-date">日付 <span class="required">必須</span></label>
+                <input type="date" id="news-date" required>
+              </div>
+              <div class="form-group">
+                <label for="news-category">カテゴリ <span class="required">必須</span></label>
+                <select id="news-category" required>
+                  <option value="お知らせ">お知らせ</option>
+                  <option value="活動報告">活動報告</option>
+                  <option value="メディア掲載">メディア掲載</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="news-title">タイトル <span class="required">必須</span></label>
+              <input type="text" id="news-title" required>
+            </div>
+            <div class="form-group">
+              <label for="news-body">本文 <span class="required">必須</span></label>
+              <textarea id="news-body" rows="4" required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm">保存</button>
+              <button type="button" class="btn btn-outline btn-sm" id="news-form-cancel">キャンセル</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="news-admin-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+
+      <!-- スケジュール管理 -->
+      <section class="admin-panel" id="tab-schedule" hidden>
+        <div class="panel-toolbar">
+          <h2>活動スケジュール</h2>
+          <button class="btn btn-primary btn-sm" id="schedule-add-btn">＋ 新規追加</button>
+        </div>
+
+        <div class="admin-form-card" id="schedule-form-card" hidden>
+          <h3 id="schedule-form-title">新規スケジュール</h3>
+          <form id="schedule-form">
+            <input type="hidden" id="schedule-edit-id">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="schedule-date">日付 <span class="required">必須</span></label>
+                <input type="date" id="schedule-date" required>
+              </div>
+              <div class="form-group">
+                <label for="schedule-location">場所 <span class="required">必須</span></label>
+                <input type="text" id="schedule-location" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="schedule-title">タイトル <span class="required">必須</span></label>
+              <input type="text" id="schedule-title" required>
+            </div>
+            <div class="form-group">
+              <label for="schedule-detail">詳細</label>
+              <textarea id="schedule-detail" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm">保存</button>
+              <button type="button" class="btn btn-outline btn-sm" id="schedule-form-cancel">キャンセル</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="schedule-admin-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+
+      <!-- 会員一覧 -->
+      <section class="admin-panel" id="tab-members" hidden>
+        <div class="panel-toolbar">
+          <h2>登録会員一覧</h2>
+          <button class="btn btn-outline btn-sm" id="members-refresh-btn">更新</button>
+        </div>
+        <div id="members-admin-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 削除確認モーダル -->
+  <div class="modal-overlay" id="delete-modal" hidden style="display:none">
+    <div class="modal-box">
+      <h3>削除の確認</h3>
+      <p id="delete-modal-msg">この項目を削除しますか？この操作は取り消せません。</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-sm" id="delete-confirm-btn">削除する</button>
+        <button class="btn btn-outline btn-sm" id="delete-cancel-btn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

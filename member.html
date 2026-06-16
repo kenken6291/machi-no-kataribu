@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会員ページ | 街の語り部</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="member.css">
+</head>
+<body class="admin-body">
+
+  <!-- ログイン画面 -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <svg class="login-mon" viewBox="0 0 60 60" aria-hidden="true">
+        <circle cx="30" cy="30" r="28" fill="none" stroke="#b5861e" stroke-width="1.5"/>
+        <ellipse cx="30" cy="16" rx="4" ry="7" fill="#b5861e" opacity="0.85"/>
+        <ellipse cx="21" cy="20" rx="3.5" ry="6" fill="#b5861e" opacity="0.7" transform="rotate(-18 21 20)"/>
+        <ellipse cx="39" cy="20" rx="3.5" ry="6" fill="#b5861e" opacity="0.7" transform="rotate(18 39 20)"/>
+        <ellipse cx="30" cy="34" rx="7" ry="4" fill="#b5861e" opacity="0.6"/>
+        <ellipse cx="22" cy="38" rx="5.5" ry="3" fill="#b5861e" opacity="0.5" transform="rotate(-12 22 38)"/>
+        <ellipse cx="38" cy="38" rx="5.5" ry="3" fill="#b5861e" opacity="0.5" transform="rotate(12 38 38)"/>
+        <ellipse cx="30" cy="46" rx="4" ry="5.5" fill="#b5861e" opacity="0.4"/>
+      </svg>
+      <h1>街の語り部<br><span>会員ページ</span></h1>
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="member-email">メールアドレス</label>
+          <input type="email" id="member-email" placeholder="登録済みのメールアドレス" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="member-pass">パスワード</label>
+          <div class="pass-input-wrap">
+            <input type="password" id="member-pass" placeholder="パスワード" required autocomplete="current-password">
+            <button type="button" class="pass-toggle-btn" data-target="member-pass" aria-label="パスワードを表示">
+              <span class="eye-icon">👁</span>
+            </button>
+          </div>
+        </div>
+        <p id="login-error" class="login-error" hidden></p>
+        <button type="submit" class="btn btn-primary" style="width:100%">ログイン</button>
+      </form>
+      <a href="index.html" class="back-link">← サイトトップに戻る</a>
+    </div>
+  </div>
+
+  <!-- 会員画面本体 -->
+  <div id="member-screen" class="admin-screen" hidden>
+    <header class="admin-header">
+      <div class="admin-header-inner">
+        <h1>街の語り部 — 会員ページ</h1>
+        <div class="admin-header-actions">
+          <span id="member-name-display" style="color:#d4a72c;font-size:.88rem;margin-right:.5rem"></span>
+          <a href="index.html" class="btn btn-outline btn-sm" target="_blank">サイトを見る</a>
+          <button class="btn btn-outline btn-sm" id="logout-btn">ログアウト</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="news">お知らせ投稿</button>
+        <button class="admin-tab" data-tab="schedule">イベント企画</button>
+        <button class="admin-tab" data-tab="join">参加するイベント</button>
+        <button class="admin-tab" data-tab="password">パスワード変更</button>
+      </div>
+
+      <!-- お知らせ投稿 -->
+      <section class="admin-panel active" id="tab-news">
+        <div class="panel-toolbar">
+          <h2>お知らせ・活動報告</h2>
+          <button class="btn btn-primary btn-sm" id="news-add-btn">＋ 新規投稿</button>
+        </div>
+        <div class="admin-form-card" id="news-form-card" hidden>
+          <h3 id="news-form-title">新規お知らせ</h3>
+          <form id="news-form">
+            <input type="hidden" id="news-edit-id">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="news-date">日付 <span class="required">必須</span></label>
+                <input type="date" id="news-date" required>
+              </div>
+              <div class="form-group">
+                <label for="news-category">カテゴリ <span class="required">必須</span></label>
+                <select id="news-category" required>
+                  <option value="お知らせ">お知らせ</option>
+                  <option value="活動報告">活動報告</option>
+                  <option value="メディア掲載">メディア掲載</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="news-title">タイトル <span class="required">必須</span></label>
+              <input type="text" id="news-title" required>
+            </div>
+            <div class="form-group">
+              <label for="news-body">本文 <span class="required">必須</span></label>
+              <textarea id="news-body" rows="4" required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm">投稿する</button>
+              <button type="button" class="btn btn-outline btn-sm" id="news-form-cancel">キャンセル</button>
+            </div>
+          </form>
+        </div>
+        <p class="member-note">※ 自分が投稿した記事のみ編集・削除できます。</p>
+        <div id="news-member-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+
+      <!-- イベント企画 -->
+      <section class="admin-panel" id="tab-schedule" hidden>
+        <div class="panel-toolbar">
+          <h2>イベント・活動企画</h2>
+          <button class="btn btn-primary btn-sm" id="schedule-add-btn">＋ 新規企画</button>
+        </div>
+        <div class="admin-form-card" id="schedule-form-card" hidden>
+          <h3 id="schedule-form-title">新規イベント企画</h3>
+          <form id="schedule-form">
+            <input type="hidden" id="schedule-edit-id">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="schedule-date">日付 <span class="required">必須</span></label>
+                <input type="date" id="schedule-date" required>
+              </div>
+              <div class="form-group">
+                <label for="schedule-location">場所 <span class="required">必須</span></label>
+                <input type="text" id="schedule-location" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="schedule-title">タイトル <span class="required">必須</span></label>
+              <input type="text" id="schedule-title" required>
+            </div>
+            <div class="form-group">
+              <label for="schedule-detail">詳細・参加条件など</label>
+              <textarea id="schedule-detail" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="schedule-organizer-email">参加連絡の受け取りメール <span class="required">必須</span></label>
+              <input type="email" id="schedule-organizer-email" required placeholder="参加ボタンが押されたときに通知が届くメールアドレス">
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm">企画を投稿する</button>
+              <button type="button" class="btn btn-outline btn-sm" id="schedule-form-cancel">キャンセル</button>
+            </div>
+          </form>
+        </div>
+        <p class="member-note">※ 自分が企画したイベントのみ編集・削除できます。</p>
+        <div id="schedule-member-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+
+      <!-- 参加するイベント -->
+      <section class="admin-panel" id="tab-join" hidden>
+        <div class="panel-toolbar">
+          <h2>参加するイベント</h2>
+        </div>
+        <p class="member-note">「参加する」を押すと企画者にメールで通知が届きます。</p>
+        <div id="join-list" class="admin-list">
+          <p class="loading-msg">読み込み中…</p>
+        </div>
+      </section>
+      <!-- パスワード変更 -->
+      <section class="admin-panel" id="tab-password" hidden>
+        <div class="panel-toolbar">
+          <h2>パスワード変更</h2>
+        </div>
+        <div class="admin-form-card" style="max-width:480px">
+          <p class="member-note">仮パスワードでログインした方は、必ずパスワードを変更してください。</p>
+          <form id="password-form" novalidate>
+            <div class="form-group">
+              <label for="current-pass">現在のパスワード <span class="required">必須</span></label>
+              <div class="pass-input-wrap">
+                <input type="password" id="current-pass" required autocomplete="current-password" placeholder="現在のパスワード">
+                <button type="button" class="pass-toggle-btn" data-target="current-pass" aria-label="パスワードを表示">
+                  <span class="eye-icon">👁</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="new-pass">新しいパスワード <span class="required">必須</span></label>
+              <div class="pass-input-wrap">
+                <input type="password" id="new-pass" required autocomplete="new-password" placeholder="8文字以上">
+                <button type="button" class="pass-toggle-btn" data-target="new-pass" aria-label="パスワードを表示">
+                  <span class="eye-icon">👁</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="new-pass-confirm">新しいパスワード（確認） <span class="required">必須</span></label>
+              <div class="pass-input-wrap">
+                <input type="password" id="new-pass-confirm" required autocomplete="new-password" placeholder="もう一度入力">
+                <button type="button" class="pass-toggle-btn" data-target="new-pass-confirm" aria-label="パスワードを表示">
+                  <span class="eye-icon">👁</span>
+                </button>
+              </div>
+            </div>
+            <p id="pass-error" class="field-error" style="margin-bottom:.75rem"></p>
+            <p id="pass-success" style="font-size:.85rem;color:#4a6741;margin-bottom:.75rem;display:none">✓ パスワードを変更しました</p>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="pass-submit-btn">パスワードを変更する</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 参加者へのメール通知モーダル -->
+  <div class="modal-overlay" id="notify-modal" hidden style="display:none">
+    <div class="modal-box" style="max-width:480px">
+      <h3>参加者にメールを送る</h3>
+      <p id="notify-modal-event" style="font-size:.85rem;color:#5a4e3c;margin-bottom:1rem"></p>
+      <div class="form-group">
+        <label for="notify-message">メッセージ <span class="required">必須</span></label>
+        <textarea id="notify-message" rows="5" placeholder="集合場所の変更、持ち物など連絡事項を入力してください"></textarea>
+      </div>
+      <p id="notify-participant-count" style="font-size:.8rem;color:#4a6741;margin-bottom:1rem"></p>
+      <p id="notify-error" style="font-size:.8rem;color:#c0392b;margin-bottom:.5rem" hidden></p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" id="notify-send-btn">送信する</button>
+        <button class="btn btn-outline btn-sm" id="notify-cancel-btn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 削除確認モーダル -->
+  <div class="modal-overlay" id="delete-modal" hidden style="display:none">
+    <div class="modal-box">
+      <h3>削除の確認</h3>
+      <p id="delete-modal-msg">この投稿を削除しますか？</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-sm" id="delete-confirm-btn">削除する</button>
+        <button class="btn btn-outline btn-sm" id="delete-cancel-btn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="member.js"></script>
+</body>
+</html>
