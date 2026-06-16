@@ -34,23 +34,27 @@ let siteData      = null;
    GAS APIコール共通
    ================================================ */
 async function gasRequest(payload) {
-  if (GAS_URL.includes('YOUR_SCRIPT_ID')) {
-    return demoHandler(payload);
-  }
-  // GASはリダイレクトするためno-corsでPOSTし、結果はGETで取得
-  const body = JSON.stringify({ ...payload, token: SESSION_TOKEN });
+  if (GAS_URL.includes('YOUR_SCRIPT_ID')) return demoHandler(payload);
   try {
-    // FormDataでPOSTするとGASがリダイレクトなしで応答する
-    const form = new FormData();
-    form.append('payload', body);
-    const res = await fetch(GAS_URL, { method: 'POST', body: form });
+    const res  = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, token: SESSION_TOKEN }),
+      redirect: 'follow',
+    });
     const text = await res.text();
-    try { return JSON.parse(text); } catch { return { result: 'success' }; }
-  } catch (e) {
-    // フォールバック：クエリパラメータでGETリクエスト
-    const params = new URLSearchParams({ payload: body });
-    const res = await fetch(`${GAS_URL}?${params}`);
-    return res.json();
+    try {
+      return JSON.parse(text);
+    } catch {
+      const form = new FormData();
+      form.append('payload', JSON.stringify({ ...payload, token: SESSION_TOKEN }));
+      const res2  = await fetch(GAS_URL, { method: 'POST', body: form, redirect: 'follow' });
+      const text2 = await res2.text();
+      try { return JSON.parse(text2); } catch { return { result: 'success' }; }
+    }
+  } catch (err) {
+    console.error('gasRequest error:', err);
+    throw new Error('サーバーへの接続に失敗しました');
   }
 }
 
