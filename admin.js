@@ -35,27 +35,29 @@ let siteData      = null;
    ================================================ */
 async function gasRequest(payload) {
   if (GAS_URL.includes('YOUR_SCRIPT_ID')) return demoHandler(payload);
+  const body = JSON.stringify({ ...payload, token: SESSION_TOKEN });
+  // text/plainで送るとGASがリダイレクトせず直接レスポンスを返す
   try {
     const res  = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, token: SESSION_TOKEN }),
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain' },
+      body:     body,
       redirect: 'follow',
     });
     const text = await res.text();
-    try {
-      return JSON.parse(text);
-    } catch {
-      const form = new FormData();
-      form.append('payload', JSON.stringify({ ...payload, token: SESSION_TOKEN }));
-      const res2  = await fetch(GAS_URL, { method: 'POST', body: form, redirect: 'follow' });
-      const text2 = await res2.text();
-      try { return JSON.parse(text2); } catch { return { result: 'success' }; }
-    }
-  } catch (err) {
-    console.error('gasRequest error:', err);
-    throw new Error('サーバーへの接続に失敗しました');
-  }
+    if (text) { try { return JSON.parse(text); } catch(e) {} }
+  } catch(e) { console.warn('gasRequest text/plain failed:', e); }
+
+  // フォールバック: FormData
+  try {
+    const form = new FormData();
+    form.append('payload', body);
+    const res2  = await fetch(GAS_URL, { method: 'POST', body: form, redirect: 'follow' });
+    const text2 = await res2.text();
+    if (text2) { try { return JSON.parse(text2); } catch(e) {} }
+  } catch(e) { console.warn('gasRequest FormData failed:', e); }
+
+  throw new Error('サーバーへの接続に失敗しました。時間をおいて再試行してください。');
 }
 
 async function gasGet(params = {}) {
@@ -71,7 +73,7 @@ async function gasGet(params = {}) {
    デモモード（GAS未接続時の動作確認用）
    ================================================ */
 function demoHandler(payload) {
-  if (payload.action === 'login')      return { result:'success', token:'demo-token-123' };
+  if (payload.action === 'adminLogin')  return { result:'success', token:'demo-token-123' };
   if (payload.action === 'updateData') return { result:'success' };
   if (payload.action === 'getMembers') return { result:'success', members: [
     { row:2, registeredAt:'2025-06-01 10:00:00', name:'山田 太郎', kana:'やまだ たろう',
@@ -114,7 +116,7 @@ function setupLogin() {
     try {
       // パスワードをGAS側で検証 → トークンを受け取る
       const json = await gasRequest({
-        action:   'login',
+        action:   'adminLogin',
         password: passInput.value,
       });
 
