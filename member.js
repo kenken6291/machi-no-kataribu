@@ -86,11 +86,26 @@ function showToast(msg, color='#1a1208') {
 }
 
 /* ================================================
-   data.json 読み込み
+   データ読み込み（GASのスプレッドシートから取得）
    ================================================ */
 async function loadData() {
-  const res  = await fetch('./data.json?' + Date.now());
-  return res.json();
+  // まずGASからスプレッドシートのデータを取得
+  try {
+    const res  = await fetch(`${GAS_URL}?action=getSiteData`);
+    const text = await res.text();
+    if (text) {
+      const json = JSON.parse(text);
+      if (json.result === 'success' && json.data) return json.data;
+    }
+  } catch(e) { console.warn('GASからのデータ取得失敗、data.jsonにフォールバック:', e); }
+
+  // フォールバック: data.json
+  try {
+    const res = await fetch('./data.json?' + Date.now());
+    return await res.json();
+  } catch(e) {
+    return { news: [], schedule: [], recruit: { open: true } };
+  }
 }
 
 /* ================================================
