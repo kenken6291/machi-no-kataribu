@@ -239,7 +239,10 @@ function renderMemberNews(list) {
   const c = document.getElementById('news-member-list');
   if (!list.length) { c.innerHTML = '<p class="loading-msg">投稿はありません。</p>'; return; }
 
-  c.innerHTML = list.map(item => {
+  // 新着順（日付降順）
+  const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date));
+
+  c.innerHTML = sorted.map(item => {
     const isMine = item.authorEmail === MEMBER_INFO?.email;
     return `
     <div class="admin-item">
@@ -336,7 +339,10 @@ function renderMemberSchedule(list) {
   const c = document.getElementById('schedule-member-list');
   if (!list.length) { c.innerHTML = '<p class="loading-msg">イベントはありません。</p>'; return; }
 
-  c.innerHTML = list.map(item => {
+  // 新着順（日付降順）
+  const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date));
+
+  c.innerHTML = sorted.map(item => {
     const isMine = item.organizerEmail === MEMBER_INFO?.email;
     const count  = item.participants?.length ?? 0;
     return `
@@ -503,7 +509,10 @@ function renderJoinList(list) {
   const c = document.getElementById('join-list');
   if (!list.length) { c.innerHTML = '<p class="loading-msg">イベントはありません。</p>'; return; }
 
-  c.innerHTML = list.map(item => {
+  // 新着順（日付降順）
+  const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date));
+
+  c.innerHTML = sorted.map(item => {
     const joined  = item.participants?.includes(MEMBER_INFO?.email);
     const isMine  = item.organizerEmail === MEMBER_INFO?.email;
     const count   = item.participants?.length ?? 0;
