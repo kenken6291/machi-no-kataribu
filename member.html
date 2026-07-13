@@ -66,7 +66,7 @@
         <button class="admin-tab active" data-tab="news">お知らせ投稿</button>
         <button class="admin-tab" data-tab="schedule">イベント企画</button>
         <button class="admin-tab" data-tab="join">参加するイベント</button>
-        <button class="admin-tab" data-tab="password">パスワード変更</button>
+        <button class="admin-tab" data-tab="account">アカウント設定</button>
       </div>
 
       <!-- お知らせ投稿 -->
@@ -167,12 +167,33 @@
           <p class="loading-msg">読み込み中…</p>
         </div>
       </section>
-      <!-- パスワード変更 -->
-      <section class="admin-panel" id="tab-password" hidden>
+      <!-- アカウント設定（ニックネーム・パスワード） -->
+      <section class="admin-panel" id="tab-account" hidden>
         <div class="panel-toolbar">
-          <h2>パスワード変更</h2>
+          <h2>アカウント設定</h2>
         </div>
+        <p id="force-pass-banner" class="urgent-note" hidden>
+          仮パスワードでログイン中です。安全のため、下記から必ずパスワードを変更してください。変更するまで他のメニューはご利用いただけません。
+        </p>
+
         <div class="admin-form-card" style="max-width:480px">
+          <h3 style="margin-bottom:.75rem">ニックネーム変更</h3>
+          <p class="member-note">お知らせ投稿・イベント企画に表示される名前です。</p>
+          <form id="nickname-form" novalidate>
+            <div class="form-group">
+              <label for="nickname-input">ニックネーム <span class="required">必須</span></label>
+              <input type="text" id="nickname-input" required maxlength="20" placeholder="たろう">
+            </div>
+            <p id="nickname-error" class="field-error" style="margin-bottom:.75rem"></p>
+            <p id="nickname-success" style="font-size:.85rem;color:#4a6741;margin-bottom:.75rem;display:none">✓ ニックネームを変更しました</p>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="nickname-submit-btn">ニックネームを変更する</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-form-card" style="max-width:480px">
+          <h3 style="margin-bottom:.75rem">パスワード変更</h3>
           <p class="member-note">仮パスワードでログインした方は、必ずパスワードを変更してください。</p>
           <form id="password-form" novalidate>
             <div class="form-group">

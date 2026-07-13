@@ -10,7 +10,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxQB0eMo8HMiJ_wpVv_eB84
    状態
    ================================================ */
 let SESSION_TOKEN = '';
-let MEMBER_INFO   = null; // { name, email, row }
+let MEMBER_INFO   = null; // { name, nickname, email, row, mustChangePassword }
 let siteData      = null;
 
 /* ================================================
@@ -150,7 +150,13 @@ function setupLogin() {
       if (!json) throw new Error('サーバーから応答がありませんでした');
       if (json.result === 'success') {
         SESSION_TOKEN = json.token;
-        MEMBER_INFO   = { name: json.name, email: json.email, row: json.row };
+        MEMBER_INFO   = {
+          name:     json.name,
+          nickname: json.nickname,
+          email:    json.email,
+          row:      json.row,
+          mustChangePassword: !!json.mustChangePassword,
+        };
         sessionStorage.setItem('member_token', SESSION_TOKEN);
         sessionStorage.setItem('member_info',  JSON.stringify(MEMBER_INFO));
         loginScreen.hidden  = true;
@@ -182,7 +188,7 @@ function setupLogin() {
    ================================================ */
 async function memberInit() {
   const nameEl = document.getElementById('member-name-display');
-  if (nameEl && MEMBER_INFO) nameEl.textContent = MEMBER_INFO.name + ' さん';
+  if (nameEl && MEMBER_INFO) nameEl.textContent = (MEMBER_INFO.nickname || MEMBER_INFO.name) + ' さん';
 
   setupTabs();
   setupDeleteModal();
@@ -201,9 +207,38 @@ async function memberInit() {
   setupScheduleForm();
   setupNotifyModal();
   setupPasswordForm();
+  setupNicknameForm();
 
   const orgEmail = document.getElementById('schedule-organizer-email');
   if (orgEmail && MEMBER_INFO) orgEmail.value = MEMBER_INFO.email;
+
+  if (MEMBER_INFO?.mustChangePassword) applyForcedPasswordChange();
+}
+
+/* ================================================
+   初回ログイン時のパスワード変更強制
+   ================================================ */
+function applyForcedPasswordChange() {
+  const banner = document.getElementById('force-pass-banner');
+  if (banner) banner.hidden = false;
+
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    if (tab.dataset.tab !== 'account') tab.setAttribute('disabled', 'disabled');
+  });
+
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => { p.classList.remove('active'); p.hidden = true; });
+  const accountTab   = document.querySelector('.admin-tab[data-tab="account"]');
+  const accountPanel = document.getElementById('tab-account');
+  if (accountTab)   accountTab.classList.add('active');
+  if (accountPanel) { accountPanel.classList.add('active'); accountPanel.hidden = false; }
+}
+
+function clearForcedPasswordChange() {
+  MEMBER_INFO.mustChangePassword = false;
+  const banner = document.getElementById('force-pass-banner');
+  if (banner) banner.hidden = true;
+  document.querySelectorAll('.admin-tab').forEach(tab => tab.removeAttribute('disabled'));
 }
 
 /* ================================================
@@ -313,7 +348,7 @@ function setupNewsForm() {
       const idx = siteData.news.findIndex(n => n.id === Number(editId));
       if (idx !== -1) siteData.news[idx] = { ...siteData.news[idx], date, category, title, body };
     } else {
-      siteData.news.unshift({ id: Date.now(), date, category, title, body, authorName: MEMBER_INFO.name, authorEmail: MEMBER_INFO.email });
+      siteData.news.unshift({ id: Date.now(), date, category, title, body, authorName: MEMBER_INFO.nickname || MEMBER_INFO.name, authorEmail: MEMBER_INFO.email });
     }
     renderMemberNews(siteData.news);
     card.hidden = true;
@@ -428,7 +463,7 @@ function setupScheduleForm() {
     } else {
       siteData.schedule.push({
         id: Date.now(), date, title, location, detail,
-        organizerName: MEMBER_INFO.name, organizerEmail, participants: []
+        organizerName: MEMBER_INFO.nickname || MEMBER_INFO.name, organizerEmail, participants: []
       });
       siteData.schedule.sort((a,b) => a.date.localeCompare(b.date));
     }
@@ -649,11 +684,59 @@ function setupPasswordForm() {
       });
       successEl.style.display = 'block';
       showToast('パスワードを変更しました', '#4a6741');
+      if (MEMBER_INFO?.mustChangePassword) {
+        clearForcedPasswordChange();
+        sessionStorage.setItem('member_info', JSON.stringify(MEMBER_INFO));
+      }
     } catch (err) {
       errEl.textContent = err.message;
     } finally {
       submitBtn.disabled    = false;
       submitBtn.textContent = 'パスワードを変更する';
+    }
+  });
+}
+
+/* ================================================
+   ニックネーム変更
+   ================================================ */
+function setupNicknameForm() {
+  const form = document.getElementById('nickname-form');
+  if (!form) return;
+
+  const input = document.getElementById('nickname-input');
+  if (input && MEMBER_INFO) input.value = MEMBER_INFO.nickname || '';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nickname  = input.value.trim();
+    const errEl     = document.getElementById('nickname-error');
+    const successEl = document.getElementById('nickname-success');
+
+    errEl.textContent       = '';
+    successEl.style.display = 'none';
+
+    if (!nickname) { errEl.textContent = 'ニックネームを入力してください'; return; }
+    if (nickname.length > 20) { errEl.textContent = 'ニックネームは20文字以内で入力してください'; return; }
+
+    const submitBtn       = document.getElementById('nickname-submit-btn');
+    submitBtn.disabled    = true;
+    submitBtn.textContent = '変更中…';
+
+    try {
+      const res = await gasPost({ action: 'updateNickname', nickname });
+      if (res.result !== 'success') throw new Error(res.message || 'エラーが発生しました');
+      MEMBER_INFO.nickname = res.nickname || nickname;
+      sessionStorage.setItem('member_info', JSON.stringify(MEMBER_INFO));
+      const nameEl = document.getElementById('member-name-display');
+      if (nameEl) nameEl.textContent = MEMBER_INFO.nickname + ' さん';
+      successEl.style.display = 'block';
+      showToast('ニックネームを変更しました', '#4a6741');
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'ニックネームを変更する';
     }
   });
 }

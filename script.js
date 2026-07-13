@@ -165,13 +165,15 @@ function setupRegisterForm() {
       .map(cb => cb.value).join('、');
 
     const payload = {
-      action:  'register',
-      name:    form.querySelector('#reg-name').value.trim(),
-      kana:    form.querySelector('#reg-kana').value.trim(),
-      email:   form.querySelector('#reg-email').value.trim(),
-      phone:   form.querySelector('#reg-phone').value.trim(),
+      action:   'register',
+      name:     form.querySelector('#reg-name').value.trim(),
+      kana:     form.querySelector('#reg-kana').value.trim(),
+      nickname: form.querySelector('#reg-nickname').value.trim(),
+      email:    form.querySelector('#reg-email').value.trim(),
+      phone:    form.querySelector('#reg-phone').value.trim(),
       skills,
-      message: form.querySelector('#reg-message').value.trim(),
+      message:  form.querySelector('#reg-message').value.trim(),
+      agree:    form.querySelector('#reg-agree').checked,
     };
 
     // GAS URL未設定時はデモ動作
@@ -204,6 +206,7 @@ function validateRegisterForm() {
   let valid = true;
   [['reg-name','err-name','お名前を入力してください'],
    ['reg-kana','err-kana','ふりがなを入力してください'],
+   ['reg-nickname','err-nickname','ニックネームを入力してください'],
    ['reg-email','err-email','メールアドレスを入力してください']
   ].forEach(([id, errId, msg]) => {
     const el  = document.getElementById(id);

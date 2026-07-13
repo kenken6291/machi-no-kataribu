@@ -209,6 +209,12 @@
                 <span class="field-error" id="err-kana"></span>
               </div>
             </div>
+            <div class="form-group">
+              <label for="reg-nickname">ニックネーム <span class="required">必須</span></label>
+              <input type="text" id="reg-nickname" name="nickname" placeholder="たろう" required maxlength="20">
+              <span class="field-error" id="err-nickname"></span>
+              <p class="field-hint">会員ページでのお知らせ投稿・イベント企画に表示される名前です。お名前・ふりがなは事務局のみが把握し、公開されません。</p>
+            </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="reg-email">メールアドレス <span class="required">必須</span></label>
@@ -237,9 +243,19 @@
               <textarea id="reg-message" name="message" rows="3" placeholder="活動への思いや、得意なことなど自由にどうぞ"></textarea>
             </div>
             <div class="form-group">
+              <label>注意事項・免責事項 <span class="required">必須</span></label>
+              <div class="disclaimer-box" id="disclaimer-box">
+                <ul>
+                  <li>街の語り部は「担当者」を置かない自律型コミュニティです。活動への参加・不参加は会員ご自身の判断と責任で行ってください。</li>
+                  <li>ガイド活動中の事故・怪我・トラブル・金銭的な損害等について、運営（登録手続きを行う事務局）は一切の責任を負いません。会員同士・参加者間で誠実に解決してください。</li>
+                  <li>ご登録いただいたお名前・ふりがな・電話番号は、本人確認と緊急連絡のためにのみ事務局が利用し、第三者に開示しません。会員ページのお知らせ投稿やイベント企画に公開されるのは「ニックネーム」のみです。</li>
+                  <li>登録時に発行される仮パスワードは第三者に知られないよう厳重に管理し、初回ログイン後は速やかにご自身のパスワードに変更してください。</li>
+                  <li>他の会員・訪問者への誹謗中傷やコミュニティの信頼を損なう行為が確認された場合、登録を取り消させていただく場合があります。</li>
+                </ul>
+              </div>
               <label class="checkbox-label agree-label">
                 <input type="checkbox" id="reg-agree" required>
-                <span>活動への参加・不参加は自己責任で行い、メンバー間のトラブルは当事者間で解決することに同意します</span>
+                <span>上記の注意事項・免責事項を読み、内容に同意します</span>
               </label>
               <span class="field-error" id="err-agree"></span>
             </div>
@@ -251,7 +267,9 @@
         <div id="register-success" class="register-success" hidden>
           <div class="success-icon" aria-hidden="true">✓</div>
           <h3>登録完了しました！</h3>
-          <p>ご登録ありがとうございます。確認メールをお送りしました。<br>あとは自分のペースで活動スケジュールをご確認ください。</p>
+          <p>ご登録ありがとうございます。仮パスワードを記載した確認メールをお送りしました。<br>
+          <a href="member.html">会員ページ</a>にログイン後、必ずパスワードを変更してください。<br>
+          あとは自分のペースで活動スケジュールをご確認ください。</p>
         </div>
         <div id="register-error" class="register-error" hidden>
           <p>登録に失敗しました。しばらく経ってから再度お試しください。</p>

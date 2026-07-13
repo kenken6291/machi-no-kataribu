@@ -76,9 +76,9 @@ function demoHandler(payload) {
   if (payload.action === 'adminLogin')  return { result:'success', token:'demo-token-123' };
   if (payload.action === 'updateData') return { result:'success' };
   if (payload.action === 'getMembers') return { result:'success', members: [
-    { row:2, registeredAt:'2025-06-01 10:00:00', name:'山田 太郎', kana:'やまだ たろう',
+    { row:2, registeredAt:'2025-06-01 10:00:00', name:'山田 太郎', kana:'やまだ たろう', nickname:'たろう',
       email:'yamada@example.com', phone:'090-0000-0001', skills:'日本語解説、英語' },
-    { row:3, registeredAt:'2025-06-05 14:30:00', name:'佐藤 花子', kana:'さとう はなこ',
+    { row:3, registeredAt:'2025-06-05 14:30:00', name:'佐藤 花子', kana:'さとう はなこ', nickname:'はなこ',
       email:'sato@example.com',   phone:'080-0000-0002', skills:'日本語解説、中国語' },
   ]};
   if (payload.action === 'deleteMember') return { result:'success' };
@@ -428,13 +428,14 @@ function renderMembers(members) {
   c.innerHTML = `
     <div class="members-table-wrap">
       <table class="members-table">
-        <thead><tr><th>#</th><th>登録日</th><th>お名前</th><th>ふりがな</th><th>メール</th><th>電話</th><th>スキル</th><th>操作</th></tr></thead>
+        <thead><tr><th>#</th><th>登録日</th><th>お名前</th><th>ふりがな</th><th>ニックネーム</th><th>メール</th><th>電話</th><th>スキル</th><th>操作</th></tr></thead>
         <tbody>${members.map((m,i) => `
           <tr>
             <td>${i+1}</td>
             <td>${esc(m.registeredAt??'')}</td>
             <td>${esc(m.name??'')}</td>
             <td>${esc(m.kana??'')}</td>
+            <td>${esc(m.nickname??'')}</td>
             <td><a href="mailto:${esc(m.email??'')}" style="color:#b5861e">${esc(m.email??'')}</a></td>
             <td>${esc(m.phone??'')}</td>
             <td style="max-width:160px;white-space:normal">${esc(m.skills??'')}</td>
