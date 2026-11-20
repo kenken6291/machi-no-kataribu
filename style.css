@@ -1159,3 +1159,69 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   font-size: 0.75rem !important;
 }
 .footer-admin-link:hover { opacity: 0.8; }
+
+/* ================================================
+   v5.0.0 追加
+   ================================================ */
+[hidden] { display: none !important; }
+
+/* バージョン情報 */
+.version-info {
+  text-align: center;
+  font-size: 0.68rem;
+  color: rgba(247,243,235,0.35);
+  margin-top: 0.75rem;
+  letter-spacing: 0.04em;
+  line-height: 1.8;
+}
+.version-info code {
+  font-family: inherit;
+  background: rgba(247,243,235,0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: rgba(247,243,235,0.6);
+}
+.version-info .ver-sep { opacity: 0.4; margin: 0 0.25em; }
+.version-info.light { color: #8a7d68; }
+.version-info.light code { background: rgba(26,18,8,0.06); color: #5a4e3c; }
+
+/* トースト */
+.app-toast {
+  position: fixed; left: 50%; bottom: 2rem;
+  transform: translate(-50%, 1rem);
+  color: #f7f3eb; padding: 0.75rem 1.5rem; border-radius: 4px;
+  font-size: 0.88rem; z-index: 10000; min-width: 220px; max-width: 90vw; text-align: center;
+  border-left: 3px solid var(--金茶);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+.app-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* お知らせ */
+.news-author { font-size: 0.75rem; color: var(--墨薄); margin-top: 0.4rem; text-align: right; }
+.more-btn { display: block; margin: 1.75rem auto 0; }
+
+/* スケジュール */
+.schedule-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.75rem; color: var(--墨薄); margin-top: 0.5rem; }
+.schedule-count { color: var(--青鈍); background: rgba(74,103,65,0.1); border-radius: 20px; padding: 0.1em 0.7em; }
+.schedule-count.is-full { color: var(--朱); background: rgba(192,57,43,0.08); }
+.schedule-item.is-past { opacity: 0.7; box-shadow: none; }
+.schedule-item.is-past .schedule-date-block { background: var(--墨薄); }
+.schedule-join-note { font-size: 0.82rem; text-align: center; color: var(--墨薄); margin-top: 0.5rem; }
+.schedule-join-note a { color: var(--金茶); text-decoration: underline; }
+.past-events { margin-top: 2rem; }
+.past-events summary {
+  cursor: pointer; font-family: var(--font-serif); font-size: 0.95rem;
+  padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--和紙2); list-style: none;
+}
+.past-events summary::-webkit-details-marker { display: none; }
+.past-events summary::before { content: '▸ '; color: var(--金茶); }
+.past-events[open] summary::before { content: '▾ '; }
+.past-events .schedule-list { margin-top: 1rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+}

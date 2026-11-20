@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5.0.0">
 </head>
 <body>
 
@@ -195,8 +195,7 @@
 
       <div class="register-box">
         <div id="register-form-wrap">
-          <form id="register-form" novalidate
-                data-gas-url="https://script.google.com/macros/s/AKfycbxQB0eMo8HMiJ_wpVv_eB84Q3EmP5G1zSXyLIB9ft1ZmAgJUKIEpEdeHbQBC4MZRUdb/exec">
+          <form id="register-form" novalidate>
             <div class="form-row">
               <div class="form-group">
                 <label for="reg-name">お名前 <span class="required">必須</span></label>
@@ -272,7 +271,7 @@
           あとは自分のペースで活動スケジュールをご確認ください。</p>
         </div>
         <div id="register-error" class="register-error" hidden>
-          <p>登録に失敗しました。しばらく経ってから再度お試しください。</p>
+          <p id="register-error-text">登録に失敗しました。しばらく経ってから再度お試しください。</p>
         </div>
       </div>
     </div>
@@ -309,6 +308,7 @@
         </nav>
       </div>
       <p class="copyright">&copy; <span id="year"></span> 街の語り部. All rights reserved.</p>
+      <p class="version-info" id="version-info"></p>
     </div>
   </footer>
 
@@ -316,6 +316,8 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor"/></svg>
   </button>
 
-  <script src="script.js"></script>
+  <script src="config.js?v=5.0.0"></script>
+  <script src="common.js?v=5.0.0"></script>
+  <script src="script.js?v=5.0.0"></script>
 </body>
 </html>

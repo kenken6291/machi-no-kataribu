@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
   <title>会員ページ | 街の語り部</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="admin.css">
-  <link rel="stylesheet" href="member.css">
+  <link rel="stylesheet" href="style.css?v=5.0.0">
+  <link rel="stylesheet" href="admin.css?v=5.0.0">
+  <link rel="stylesheet" href="member.css?v=5.0.0">
 </head>
 <body class="admin-body">
 
@@ -27,6 +28,7 @@
         <ellipse cx="30" cy="46" rx="4" ry="5.5" fill="#b5861e" opacity="0.4"/>
       </svg>
       <h1>街の語り部<br><span>会員ページ</span></h1>
+
       <form id="login-form" novalidate>
         <div class="form-group">
           <label for="member-email">メールアドレス</label>
@@ -43,8 +45,23 @@
         </div>
         <p id="login-error" class="login-error" hidden></p>
         <button type="submit" class="btn btn-primary" style="width:100%">ログイン</button>
+        <button type="button" class="link-btn" id="forgot-open">パスワードを忘れた方</button>
       </form>
+
+      <!-- パスワード再発行 -->
+      <form id="forgot-form" novalidate hidden>
+        <p class="forgot-lead">登録したメールアドレスを入力してください。新しい仮パスワードをメールでお送りします。</p>
+        <div class="form-group">
+          <label for="forgot-email">メールアドレス</label>
+          <input type="email" id="forgot-email" required autocomplete="email">
+        </div>
+        <p id="forgot-msg" class="forgot-msg" hidden></p>
+        <button type="submit" class="btn btn-primary" style="width:100%" id="forgot-submit">仮パスワードを送る</button>
+        <button type="button" class="link-btn" id="forgot-close">← ログインに戻る</button>
+      </form>
+
       <a href="index.html" class="back-link">← サイトトップに戻る</a>
+      <p class="version-info light" id="version-info"></p>
     </div>
   </div>
 
@@ -52,21 +69,22 @@
   <div id="member-screen" class="admin-screen" hidden>
     <header class="admin-header">
       <div class="admin-header-inner">
-        <h1>街の語り部 — 会員ページ</h1>
+        <h1>街の語り部 <span class="hide-sp">— 会員ページ</span></h1>
         <div class="admin-header-actions">
-          <span id="member-name-display" style="color:#d4a72c;font-size:.88rem;margin-right:.5rem"></span>
-          <a href="index.html" class="btn btn-outline btn-sm" target="_blank">サイトを見る</a>
+          <span id="member-name-display" class="member-name"></span>
+          <a href="index.html" class="btn btn-outline btn-sm hide-sp" target="_blank" rel="noopener">サイトを見る</a>
           <button class="btn btn-outline btn-sm" id="logout-btn">ログアウト</button>
         </div>
       </div>
     </header>
 
     <main class="admin-main">
-      <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="news">お知らせ投稿</button>
+      <div class="admin-tabs" role="tablist">
+        <button class="admin-tab active" data-tab="news">お知らせ</button>
         <button class="admin-tab" data-tab="schedule">イベント企画</button>
-        <button class="admin-tab" data-tab="join">参加するイベント</button>
-        <button class="admin-tab" data-tab="account">アカウント設定</button>
+        <button class="admin-tab" data-tab="join">参加する</button>
+        <button class="admin-tab" data-tab="ai">✨ AIアシスタント</button>
+        <button class="admin-tab" data-tab="account">アカウント</button>
       </div>
 
       <!-- お知らせ投稿 -->
@@ -77,7 +95,7 @@
         </div>
         <div class="admin-form-card" id="news-form-card" hidden>
           <h3 id="news-form-title">新規お知らせ</h3>
-          <form id="news-form">
+          <form id="news-form" novalidate>
             <input type="hidden" id="news-edit-id">
             <div class="form-row">
               <div class="form-group">
@@ -95,11 +113,16 @@
             </div>
             <div class="form-group">
               <label for="news-title">タイトル <span class="required">必須</span></label>
-              <input type="text" id="news-title" required>
+              <input type="text" id="news-title" maxlength="100" required>
             </div>
             <div class="form-group">
               <label for="news-body">本文 <span class="required">必須</span></label>
-              <textarea id="news-body" rows="4" required></textarea>
+              <textarea id="news-body" rows="6" maxlength="3000" required placeholder="メモ書きでもOK。「✨ AIで文章を整える」で読みやすくできます"></textarea>
+            </div>
+            <div class="ai-inline">
+              <button type="button" class="btn btn-ai btn-sm" id="news-ai-btn">✨ AIで文章を整える</button>
+              <span class="ai-inline-hint">タイトルと本文を書き換えます（元に戻すボタンあり）</span>
+              <button type="button" class="link-btn" id="news-ai-undo" hidden>↩ 元に戻す</button>
             </div>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary btn-sm">投稿する</button>
@@ -107,7 +130,7 @@
             </div>
           </form>
         </div>
-        <p class="member-note">※ 自分が投稿した記事のみ編集・削除できます。</p>
+        <p class="member-note">※ 投稿はトップページにも公開されます（表示名はニックネーム）。自分の投稿のみ編集・削除できます。</p>
         <div id="news-member-list" class="admin-list">
           <p class="loading-msg">読み込み中…</p>
         </div>
@@ -121,7 +144,7 @@
         </div>
         <div class="admin-form-card" id="schedule-form-card" hidden>
           <h3 id="schedule-form-title">新規イベント企画</h3>
-          <form id="schedule-form">
+          <form id="schedule-form" novalidate>
             <input type="hidden" id="schedule-edit-id">
             <div class="form-row">
               <div class="form-group">
@@ -129,29 +152,44 @@
                 <input type="date" id="schedule-date" required>
               </div>
               <div class="form-group">
+                <label for="schedule-time">開始時刻</label>
+                <input type="time" id="schedule-time">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label for="schedule-location">場所 <span class="required">必須</span></label>
-                <input type="text" id="schedule-location" required>
+                <input type="text" id="schedule-location" maxlength="100" required>
+              </div>
+              <div class="form-group">
+                <label for="schedule-capacity">定員（0＝制限なし）</label>
+                <input type="number" id="schedule-capacity" min="0" max="999" value="0" inputmode="numeric">
               </div>
             </div>
             <div class="form-group">
               <label for="schedule-title">タイトル <span class="required">必須</span></label>
-              <input type="text" id="schedule-title" required>
+              <input type="text" id="schedule-title" maxlength="100" required>
             </div>
             <div class="form-group">
               <label for="schedule-detail">詳細・参加条件など</label>
-              <textarea id="schedule-detail" rows="3"></textarea>
+              <textarea id="schedule-detail" rows="5" maxlength="3000" placeholder="メモを書いて「✨ AIで案内文を作る」も使えます"></textarea>
+            </div>
+            <div class="ai-inline">
+              <button type="button" class="btn btn-ai btn-sm" id="schedule-ai-btn">✨ AIで案内文を作る</button>
+              <span class="ai-inline-hint">タイトル・場所・メモから詳細欄を作成します</span>
+              <button type="button" class="link-btn" id="schedule-ai-undo" hidden>↩ 元に戻す</button>
             </div>
             <div class="form-group">
               <label for="schedule-organizer-email">参加連絡の受け取りメール <span class="required">必須</span></label>
-              <input type="email" id="schedule-organizer-email" required placeholder="参加ボタンが押されたときに通知が届くメールアドレス">
+              <input type="email" id="schedule-organizer-email" required placeholder="参加・取り消しがあったときに通知が届くアドレス">
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary btn-sm">企画を投稿する</button>
+              <button type="submit" class="btn btn-primary btn-sm" id="schedule-submit">企画を投稿する</button>
               <button type="button" class="btn btn-outline btn-sm" id="schedule-form-cancel">キャンセル</button>
             </div>
           </form>
         </div>
-        <p class="member-note">※ 自分が企画したイベントのみ編集・削除できます。</p>
+        <p class="member-note">※ 自分が企画したイベントのみ編集・削除できます。参加者の一覧は自分の企画にだけ表示されます。</p>
         <div id="schedule-member-list" class="admin-list">
           <p class="loading-msg">読み込み中…</p>
         </div>
@@ -161,13 +199,101 @@
       <section class="admin-panel" id="tab-join" hidden>
         <div class="panel-toolbar">
           <h2>参加するイベント</h2>
+          <label class="toggle-past"><input type="checkbox" id="join-show-past"> 過去も表示</label>
         </div>
-        <p class="member-note">「参加する」を押すと企画者にメールで通知が届きます。</p>
+        <p class="member-note">「参加する」を押すと企画者にメールで通知が届きます。取り消しもできます。</p>
         <div id="join-list" class="admin-list">
           <p class="loading-msg">読み込み中…</p>
         </div>
       </section>
-      <!-- アカウント設定（ニックネーム・パスワード） -->
+
+      <!-- AIアシスタント -->
+      <section class="admin-panel" id="tab-ai" hidden>
+        <div class="panel-toolbar">
+          <h2>AIアシスタント</h2>
+        </div>
+
+        <div class="admin-form-card model-card">
+          <label for="ai-model" class="model-label">使うAIモデル</label>
+          <select id="ai-model" class="model-select"></select>
+          <p class="model-hint">選んだモデルが使えない時は、汎用の最新モデルに自動で切り替わります</p>
+        </div>
+
+        <div class="admin-form-card">
+          <h3>📜 ガイド原稿づくり</h3>
+          <p class="member-note">案内したい場所やテーマから、現地で読み上げる原稿の下書きを作ります。AIは事実を間違えることがあります。<strong>【要確認】</strong>の箇所は必ず資料で確かめてから使ってください。</p>
+          <form id="guide-form" novalidate>
+            <div class="form-group">
+              <label for="guide-place">場所・テーマ <span class="required">必須</span></label>
+              <input type="text" id="guide-place" maxlength="100" placeholder="例）旧街道の宿場町と本陣跡">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="guide-audience">聞き手</label>
+                <select id="guide-audience">
+                  <option>一般の観光客</option>
+                  <option>小学生の子どもたち</option>
+                  <option>シニアの方々</option>
+                  <option>外国人観光客</option>
+                  <option>歴史好きの方々</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="guide-minutes">話す時間</label>
+                <select id="guide-minutes">
+                  <option value="3">約3分</option>
+                  <option value="5" selected>約5分</option>
+                  <option value="10">約10分</option>
+                  <option value="15">約15分</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="guide-language">言語</label>
+                <select id="guide-language">
+                  <option>日本語</option>
+                  <option>やさしい日本語</option>
+                  <option>英語</option>
+                  <option>中国語（簡体字）</option>
+                  <option>韓国語</option>
+                  <option>フランス語</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="guide-tone">語り口</label>
+                <select id="guide-tone">
+                  <option>親しみやすい語り口</option>
+                  <option>落ち着いた丁寧な語り口</option>
+                  <option>物語風（講談のように）</option>
+                  <option>クイズを交えた楽しい語り口</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="guide-notes">知っている情報・メモ（任意）</label>
+              <textarea id="guide-notes" rows="4" maxlength="2000" placeholder="地元の言い伝え、資料で調べたこと、見どころなど。ここに書いた内容が優先して使われます"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-ai" id="guide-submit">✨ 原稿を作る</button>
+            </div>
+          </form>
+
+          <div class="ai-result" id="guide-result" hidden>
+            <div class="ai-result-head">
+              <span id="guide-result-model" class="ai-result-model"></span>
+              <div class="ai-result-actions">
+                <button type="button" class="btn btn-outline btn-sm" id="guide-copy">コピー</button>
+                <button type="button" class="btn btn-outline btn-sm" id="guide-to-news">お知らせ下書きへ</button>
+              </div>
+            </div>
+            <div id="guide-result-text" class="ai-result-text"></div>
+          </div>
+        </div>
+        <p class="ai-limit" id="ai-limit"></p>
+      </section>
+
+      <!-- アカウント設定 -->
       <section class="admin-panel" id="tab-account" hidden>
         <div class="panel-toolbar">
           <h2>アカウント設定</h2>
@@ -176,55 +302,48 @@
           仮パスワードでログイン中です。安全のため、下記から必ずパスワードを変更してください。変更するまで他のメニューはご利用いただけません。
         </p>
 
-        <div class="admin-form-card" style="max-width:480px">
-          <h3 style="margin-bottom:.75rem">ニックネーム変更</h3>
+        <div class="admin-form-card narrow">
+          <h3>ニックネーム変更</h3>
           <p class="member-note">お知らせ投稿・イベント企画に表示される名前です。</p>
           <form id="nickname-form" novalidate>
             <div class="form-group">
               <label for="nickname-input">ニックネーム <span class="required">必須</span></label>
               <input type="text" id="nickname-input" required maxlength="20" placeholder="たろう">
             </div>
-            <p id="nickname-error" class="field-error" style="margin-bottom:.75rem"></p>
-            <p id="nickname-success" style="font-size:.85rem;color:#4a6741;margin-bottom:.75rem;display:none">✓ ニックネームを変更しました</p>
+            <p id="nickname-error" class="field-error"></p>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary btn-sm" id="nickname-submit-btn">ニックネームを変更する</button>
             </div>
           </form>
         </div>
 
-        <div class="admin-form-card" style="max-width:480px">
-          <h3 style="margin-bottom:.75rem">パスワード変更</h3>
-          <p class="member-note">仮パスワードでログインした方は、必ずパスワードを変更してください。</p>
+        <div class="admin-form-card narrow">
+          <h3>パスワード変更</h3>
           <form id="password-form" novalidate>
             <div class="form-group">
               <label for="current-pass">現在のパスワード <span class="required">必須</span></label>
               <div class="pass-input-wrap">
-                <input type="password" id="current-pass" required autocomplete="current-password" placeholder="現在のパスワード">
-                <button type="button" class="pass-toggle-btn" data-target="current-pass" aria-label="パスワードを表示">
-                  <span class="eye-icon">👁</span>
-                </button>
+                <input type="password" id="current-pass" required autocomplete="current-password" placeholder="現在（仮）のパスワード">
+                <button type="button" class="pass-toggle-btn" data-target="current-pass" aria-label="パスワードを表示"><span class="eye-icon">👁</span></button>
               </div>
             </div>
             <div class="form-group">
               <label for="new-pass">新しいパスワード <span class="required">必須</span></label>
               <div class="pass-input-wrap">
                 <input type="password" id="new-pass" required autocomplete="new-password" placeholder="8文字以上">
-                <button type="button" class="pass-toggle-btn" data-target="new-pass" aria-label="パスワードを表示">
-                  <span class="eye-icon">👁</span>
-                </button>
+                <button type="button" class="pass-toggle-btn" data-target="new-pass" aria-label="パスワードを表示"><span class="eye-icon">👁</span></button>
               </div>
+              <div class="pass-meter" aria-hidden="true"><span id="pass-meter-bar"></span></div>
+              <p class="pass-meter-text" id="pass-meter-text"></p>
             </div>
             <div class="form-group">
               <label for="new-pass-confirm">新しいパスワード（確認） <span class="required">必須</span></label>
               <div class="pass-input-wrap">
                 <input type="password" id="new-pass-confirm" required autocomplete="new-password" placeholder="もう一度入力">
-                <button type="button" class="pass-toggle-btn" data-target="new-pass-confirm" aria-label="パスワードを表示">
-                  <span class="eye-icon">👁</span>
-                </button>
+                <button type="button" class="pass-toggle-btn" data-target="new-pass-confirm" aria-label="パスワードを表示"><span class="eye-icon">👁</span></button>
               </div>
             </div>
-            <p id="pass-error" class="field-error" style="margin-bottom:.75rem"></p>
-            <p id="pass-success" style="font-size:.85rem;color:#4a6741;margin-bottom:.75rem;display:none">✓ パスワードを変更しました</p>
+            <p id="pass-error" class="field-error"></p>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary btn-sm" id="pass-submit-btn">パスワードを変更する</button>
             </div>
@@ -232,20 +351,21 @@
         </div>
       </section>
 
+      <p class="version-info light" id="version-info-main"></p>
     </main>
   </div>
 
   <!-- 参加者へのメール通知モーダル -->
-  <div class="modal-overlay" id="notify-modal" hidden style="display:none">
+  <div class="modal-overlay" id="notify-modal" hidden>
     <div class="modal-box" style="max-width:480px">
       <h3>参加者にメールを送る</h3>
-      <p id="notify-modal-event" style="font-size:.85rem;color:#5a4e3c;margin-bottom:1rem"></p>
+      <p id="notify-modal-event" class="modal-sub"></p>
       <div class="form-group">
         <label for="notify-message">メッセージ <span class="required">必須</span></label>
-        <textarea id="notify-message" rows="5" placeholder="集合場所の変更、持ち物など連絡事項を入力してください"></textarea>
+        <textarea id="notify-message" rows="5" maxlength="2000" placeholder="集合場所の変更、持ち物など連絡事項を入力してください"></textarea>
       </div>
-      <p id="notify-participant-count" style="font-size:.8rem;color:#4a6741;margin-bottom:1rem"></p>
-      <p id="notify-error" style="font-size:.8rem;color:#c0392b;margin-bottom:.5rem" hidden></p>
+      <p id="notify-participant-count" class="modal-sub" style="color:#4a6741"></p>
+      <p id="notify-error" class="field-error" hidden></p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-sm" id="notify-send-btn">送信する</button>
         <button class="btn btn-outline btn-sm" id="notify-cancel-btn">キャンセル</button>
@@ -253,18 +373,20 @@
     </div>
   </div>
 
-  <!-- 削除確認モーダル -->
-  <div class="modal-overlay" id="delete-modal" hidden style="display:none">
+  <!-- 確認モーダル -->
+  <div class="modal-overlay" id="confirm-modal" hidden>
     <div class="modal-box">
-      <h3>削除の確認</h3>
-      <p id="delete-modal-msg">この投稿を削除しますか？</p>
+      <h3 id="confirm-modal-title">確認</h3>
+      <p id="confirm-modal-msg"></p>
       <div class="modal-actions">
-        <button class="btn btn-danger btn-sm" id="delete-confirm-btn">削除する</button>
-        <button class="btn btn-outline btn-sm" id="delete-cancel-btn">キャンセル</button>
+        <button class="btn btn-danger btn-sm" id="confirm-ok-btn">OK</button>
+        <button class="btn btn-outline btn-sm" id="confirm-cancel-btn">キャンセル</button>
       </div>
     </div>
   </div>
 
-  <script src="member.js"></script>
+  <script src="config.js?v=5.0.0"></script>
+  <script src="common.js?v=5.0.0"></script>
+  <script src="member.js?v=5.0.0"></script>
 </body>
 </html>

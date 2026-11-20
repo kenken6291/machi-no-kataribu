@@ -284,3 +284,35 @@
 }
 .modal-box p { font-size: 0.9rem; color: #5a4e3c; margin-bottom: 1.5rem; line-height: 1.7; }
 .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+/* ================================================
+   v5.0.0 追加：スマホ対応
+   ================================================ */
+@media (max-width: 640px) {
+  .admin-header { padding: 0 0.75rem; }
+  .admin-header-inner { height: auto; min-height: 56px; padding: 0.5rem 0; gap: 0.5rem; }
+  .admin-header h1 { font-size: 0.9rem; white-space: nowrap; }
+  .admin-header-actions { gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+  .hide-sp { display: none !important; }
+  .admin-main { padding: 1.25rem 0.9rem; }
+  .admin-tab { padding: 0.65rem 0.9rem; font-size: 0.85rem; }
+  .admin-form-card { padding: 1.25rem 1rem !important; }
+  .admin-item { flex-direction: column; }
+  .admin-item-actions { flex-wrap: wrap; }
+  .modal-box { padding: 1.5rem 1.25rem; }
+}
+.admin-item-body { white-space: pre-line; }
+.admin-stats { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+.admin-stat { background: #fff; border: 1px solid var(--admin-border, rgba(26,18,8,0.1)); border-radius: 6px; padding: 0.75rem 1.1rem; min-width: 120px; }
+.admin-stat b { display: block; font-size: 1.4rem; font-family: 'Noto Serif JP', serif; color: #1a1208; }
+.admin-stat span { font-size: 0.75rem; color: #5a4e3c; }
+.admin-search { width: 100%; max-width: 320px; padding: 0.5rem 0.75rem; border: 1px solid rgba(26,18,8,0.2); border-radius: 4px; font-size: 0.9rem; margin-bottom: 1rem; }
+.status-pill { font-size: 0.7rem; border-radius: 10px; padding: 0.1em 0.6em; background: rgba(192,57,43,0.1); color: #a93226; }
+.admin-header .btn-outline { color: #f7f3eb; border-color: rgba(247,243,235,0.45); }
+.admin-header .btn-outline:hover { background: #f7f3eb; color: #1a1208; }
+@media (max-width: 640px) {
+  .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .admin-stat { min-width: 0; padding: 0.6rem 0.7rem; }
+  .admin-stat b { font-size: 1.2rem; }
+  .admin-stat span { font-size: 0.68rem; }
+}

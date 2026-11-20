@@ -1,39 +1,14 @@
 /**
- * 街の語り部 — script.js
- * 一般サイト用：data.json読み込み・描画・会員登録フォーム
- *
- * ★ セキュリティ方針
- *   - APIキー・パスワード・GAS URLはこのファイルに一切含まない
- *   - 会員登録のGAS URLは admin.js 側でのみ管理（管理者だけが知るURL）
- *   - 登録フォームのエンドポイントは <form data-endpoint="..."> 属性で
- *     admin.html 側から注入する形にせず、別途 config.js（.gitignore対象）
- *     または GAS側トークン検証で保護する
- *
- *   ▼ 会員登録フォームのGAS URLの設定方法
- *     index.html の <form id="register-form"> に
- *     data-gas-url="https://script.google.com/macros/s/【YOUR_ID】/exec"
- *     属性を追加してください。このHTMLファイル自体はパブリックですが、
- *     GAS側でCORSとreCAPTCHAトークン検証を行うため安全です。
+ * 街の語り部 — script.js（公開トップページ）
+ *   - サイト設定・仲間募集：data.json（GitHubで編集）
+ *   - お知らせ・スケジュール：GAS（会員・管理者の投稿。メールアドレスは含まれない）
+ *   - 会員登録フォーム → GAS
+ * ※ config.js → common.js の後に読み込むこと
  */
 'use strict';
 
-/* ================================================
-   ユーティリティ
-   ================================================ */
-function esc(str) {
-  return String(str ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
-}
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  if (isNaN(d)) return esc(dateStr);
-  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-}
-function parseDateParts(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return { month: d.getMonth()+1, day: d.getDate(), wday: ['日','月','火','水','木','金','土'][d.getDay()] };
-}
+const NEWS_PAGE_SIZE = 6;
+
 function catClass(cat) {
   if (!cat) return '';
   if (cat.includes('報告')) return 'cat-report';
@@ -42,9 +17,9 @@ function catClass(cat) {
 }
 
 /* ================================================
-   data.json 読み込み（公開コンテンツのみ・機密情報なし）
+   データ読み込み
    ================================================ */
-async function loadData() {
+async function loadStaticData() {
   try {
     const res = await fetch('./data.json?' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -54,52 +29,104 @@ async function loadData() {
     return null;
   }
 }
+async function loadLiveData() {
+  if (!isGasConfigured()) return null;
+  try {
+    const json = await gasGet({ action: 'getSiteData' });
+    if (json.result === 'success' && json.data) return json.data;
+  } catch (e) { console.warn('GASからの取得に失敗:', e); }
+  return null;
+}
 
 /* ================================================
-   お知らせ描画
+   お知らせ描画（新しい順・もっと見る）
    ================================================ */
 function renderNews(list, container) {
   if (!list?.length) {
     container.innerHTML = '<p class="loading-msg">現在お知らせはありません。</p>'; return;
   }
-  container.innerHTML = list.map(item => `
-    <div class="news-item" data-reveal>
-      <div class="news-meta">
-        <time class="news-date" datetime="${esc(item.date)}">${formatDate(item.date)}</time>
-        <span class="news-cat ${catClass(item.category)}">${esc(item.category)}</span>
-      </div>
-      <div class="news-body">
-        <h3>${esc(item.title)}</h3>
-        <p>${esc(item.body)}</p>
-      </div>
-    </div>`).join('');
-  triggerReveal(container.querySelectorAll('[data-reveal]'));
+  const sorted = [...list].sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.id - a.id));
+  let shown = 0;
+  container.innerHTML = '<div class="news-items"></div>';
+  const wrap = container.querySelector('.news-items');
+
+  const more = document.createElement('button');
+  more.type = 'button';
+  more.className = 'btn btn-outline more-btn';
+
+  const showMore = () => {
+    const next = sorted.slice(shown, shown + NEWS_PAGE_SIZE);
+    wrap.insertAdjacentHTML('beforeend', next.map(item => `
+      <article class="news-item" data-reveal>
+        <div class="news-meta">
+          <time class="news-date" datetime="${esc(item.date)}">${formatDateJa(item.date)}</time>
+          <span class="news-cat ${catClass(item.category)}">${esc(item.category)}</span>
+        </div>
+        <div class="news-body">
+          <h3>${esc(item.title)}</h3>
+          <p>${escBr(item.body)}</p>
+          ${item.authorName ? `<p class="news-author">— ${esc(item.authorName)}</p>` : ''}
+        </div>
+      </article>`).join(''));
+    shown += next.length;
+    triggerReveal(wrap.querySelectorAll('[data-reveal]:not(.revealed)'));
+    if (shown >= sorted.length) more.remove();
+    else more.textContent = `もっと見る（残り${sorted.length - shown}件）`;
+  };
+  more.addEventListener('click', showMore);
+  container.appendChild(more);
+  showMore();
 }
 
 /* ================================================
-   スケジュール描画
+   スケジュール描画（これからの予定＋過去の活動）
    ================================================ */
+function scheduleCard(item, past) {
+  const d = new Date(item.date + 'T00:00:00');
+  const wday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+  const count = Number(item.participantCount) || 0;
+  const cap   = Number(item.capacity) || 0;
+  const full  = cap && count >= cap;
+  return `
+    <div class="schedule-item${past ? ' is-past' : ''}" data-reveal>
+      <div class="schedule-date-block">
+        <span class="schedule-month">${d.getMonth() + 1}月</span>
+        <span class="schedule-day">${d.getDate()}</span>
+        <span class="schedule-weekday">${wday}曜</span>
+      </div>
+      <div class="schedule-info">
+        <h3>${esc(item.title)}</h3>
+        <p class="schedule-location">📍 ${esc(item.location)}${item.time ? `　🕘 ${esc(item.time)}〜` : ''}</p>
+        ${item.detail ? `<p class="schedule-detail">${escBr(item.detail)}</p>` : ''}
+        <p class="schedule-meta">
+          ${item.organizerName ? `<span>企画：${esc(item.organizerName)}</span>` : ''}
+          ${!past ? `<span class="schedule-count${full ? ' is-full' : ''}">👥 参加予定 ${count}名${cap ? ` ／ 定員${cap}名` : ''}${full ? '（満員）' : ''}</span>` : ''}
+        </p>
+      </div>
+    </div>`;
+}
+
 function renderSchedule(list, container) {
   if (!list?.length) {
     container.innerHTML = '<p class="loading-msg">現在予定はありません。</p>'; return;
   }
-  container.innerHTML = list.map(item => {
-    const { month, day, wday } = parseDateParts(item.date);
-    return `
-    <div class="schedule-item" data-reveal>
-      <div class="schedule-date-block">
-        <span class="schedule-month">${esc(String(month))}月</span>
-        <span class="schedule-day">${esc(String(day))}</span>
-        <span class="schedule-weekday">${esc(wday)}曜</span>
-      </div>
-      <div class="schedule-info">
-        <h3>${esc(item.title)}</h3>
-        <p class="schedule-location">📍 ${esc(item.location)}</p>
-        <p class="schedule-detail">${esc(item.detail)}</p>
-      </div>
-    </div>`;
-  }).join('');
+  const today = todayStr();
+  const key = s => String(s.date) + (s.time || '');
+  const upcoming = list.filter(s => s.date >= today).sort((a, b) => key(a).localeCompare(key(b)));
+  const past     = list.filter(s => s.date <  today).sort((a, b) => key(b).localeCompare(key(a)));
+
+  container.innerHTML = `
+    ${upcoming.length ? upcoming.map(s => scheduleCard(s, false)).join('') : '<p class="loading-msg">これからの予定は準備中です。</p>'}
+    ${upcoming.length ? '<p class="schedule-join-note">参加の申込みは <a href="member.html">会員ページ</a> からどうぞ。</p>' : ''}
+    ${past.length ? `
+      <details class="past-events">
+        <summary>過去の活動（${past.length}件）</summary>
+        <div class="schedule-list">${past.slice(0, 30).map(s => scheduleCard(s, true)).join('')}</div>
+      </details>` : ''}`;
   triggerReveal(container.querySelectorAll('[data-reveal]'));
+  container.querySelector('.past-events')?.addEventListener('toggle', e => {
+    e.target.querySelectorAll('[data-reveal]').forEach(el => el.classList.add('revealed'));
+  });
 }
 
 /* ================================================
@@ -110,13 +137,15 @@ function renderRecruit(recruit, container) {
   if (!recruit.open) {
     container.innerHTML = `<div class="recruit-closed" data-reveal><p>現在メンバーの新規登録は行っておりません。</p></div>`;
     triggerReveal(container.querySelectorAll('[data-reveal]'));
+    const reg = document.getElementById('register');
+    if (reg) reg.hidden = true;
     return;
   }
-  const reqItems  = (recruit.requirements||[]).map(r=>`<li>${esc(r)}</li>`).join('');
-  const ruleItems = (recruit.rules||[]).map(r=>`<li>${esc(r)}</li>`).join('');
-  const flowSteps = (recruit.flow||[]).map((f,i)=>`
-    <div class="flow-step" data-reveal data-reveal-delay="${Math.min(i+1,3)}">
-      <span class="flow-num">${i+1}</span>
+  const reqItems  = (recruit.requirements || []).map(r => `<li>${esc(r)}</li>`).join('');
+  const ruleItems = (recruit.rules || []).map(r => `<li>${esc(r)}</li>`).join('');
+  const flowSteps = (recruit.flow || []).map((f, i) => `
+    <div class="flow-step" data-reveal data-reveal-delay="${Math.min(i + 1, 3)}">
+      <span class="flow-num">${i + 1}</span>
       <p class="flow-text">${esc(f)}</p>
     </div>`).join('');
 
@@ -142,27 +171,30 @@ function renderRecruit(recruit, container) {
    会員登録フォーム
    ================================================ */
 function setupRegisterForm() {
-  const form    = document.getElementById('register-form');
+  const form = document.getElementById('register-form');
   if (!form) return;
-
-  // GAS URLはHTML属性から取得（ソースコードに埋め込まない）
-  const GAS_ENDPOINT = form.dataset.gasUrl ?? '';
 
   const wrap      = document.getElementById('register-form-wrap');
   const success   = document.getElementById('register-success');
   const errBox    = document.getElementById('register-error');
+  const errText   = document.getElementById('register-error-text');
   const submitBtn = document.getElementById('reg-submit');
+
+  // 入力し直したらエラー表示を消す
+  form.addEventListener('input', e => {
+    const err = document.getElementById('err-' + String(e.target.id).replace('reg-', ''));
+    if (err) err.textContent = '';
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!validateRegisterForm()) return;
-
+    if (!validateRegisterForm()) {
+      form.querySelector('.field-error:not(:empty)')?.closest('.form-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     submitBtn.disabled    = true;
     submitBtn.textContent = '送信中…';
     errBox.hidden         = true;
-
-    const skills = [...form.querySelectorAll('input[name="skills"]:checked')]
-      .map(cb => cb.value).join('、');
 
     const payload = {
       action:   'register',
@@ -171,31 +203,22 @@ function setupRegisterForm() {
       nickname: form.querySelector('#reg-nickname').value.trim(),
       email:    form.querySelector('#reg-email').value.trim(),
       phone:    form.querySelector('#reg-phone').value.trim(),
-      skills,
+      skills:   [...form.querySelectorAll('input[name="skills"]:checked')].map(cb => cb.value).join('、'),
       message:  form.querySelector('#reg-message').value.trim(),
       agree:    form.querySelector('#reg-agree').checked,
     };
 
-    // GAS URL未設定時はデモ動作
-    if (!GAS_ENDPOINT || GAS_ENDPOINT.includes('YOUR_SCRIPT_ID')) {
-      await new Promise(r => setTimeout(r, 700));
+    try {
+      const json = await gasPost(payload);
+      if (json.result !== 'success') throw new Error(json.message || 'エラーが発生しました');
       wrap.hidden    = true;
       success.hidden = false;
-      return;
-    }
-
-    try {
-      const res  = await fetch(GAS_ENDPOINT, { method:'POST', body: JSON.stringify(payload) });
-      const json = await res.json();
-      if (json.result === 'success') {
-        wrap.hidden    = true;
-        success.hidden = false;
-      } else {
-        throw new Error(json.message || 'エラーが発生しました');
-      }
+      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) {
       console.error('登録エラー:', err);
-      errBox.hidden         = false;
+      errText.textContent = err.message || '登録に失敗しました。しばらく経ってから再度お試しください。';
+      errBox.hidden = false;
+    } finally {
       submitBtn.disabled    = false;
       submitBtn.textContent = '登録する';
     }
@@ -204,10 +227,10 @@ function setupRegisterForm() {
 
 function validateRegisterForm() {
   let valid = true;
-  [['reg-name','err-name','お名前を入力してください'],
-   ['reg-kana','err-kana','ふりがなを入力してください'],
-   ['reg-nickname','err-nickname','ニックネームを入力してください'],
-   ['reg-email','err-email','メールアドレスを入力してください']
+  [['reg-name', 'err-name', 'お名前を入力してください'],
+   ['reg-kana', 'err-kana', 'ふりがなを入力してください'],
+   ['reg-nickname', 'err-nickname', 'ニックネームを入力してください'],
+   ['reg-email', 'err-email', 'メールアドレスを入力してください']
   ].forEach(([id, errId, msg]) => {
     const el  = document.getElementById(id);
     const err = document.getElementById(errId);
@@ -217,7 +240,7 @@ function validateRegisterForm() {
   });
   const emailEl  = document.getElementById('reg-email');
   const emailErr = document.getElementById('err-email');
-  if (emailEl?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+  if (emailEl?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())) {
     if (emailErr) emailErr.textContent = '正しいメールアドレスを入力してください';
     valid = false;
   }
@@ -231,7 +254,7 @@ function validateRegisterForm() {
 }
 
 /* ================================================
-   IntersectionObserver フェードイン
+   フェードイン
    ================================================ */
 let revealObserver;
 function setupRevealObserver() {
@@ -248,33 +271,34 @@ function setupRevealObserver() {
 }
 function triggerReveal(elements) {
   if (revealObserver) elements.forEach(el => revealObserver.observe(el));
+  else elements.forEach(el => el.classList.add('revealed'));
 }
 
 /* ================================================
-   ヘッダー・ハンバーガー・スクロール
+   ヘッダー・ハンバーガー・トップへ
    ================================================ */
 function setupHeader() {
   const header = document.getElementById('site-header');
   if (!header) return;
-  window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 40), { passive:true });
+  window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
 }
 function setupHamburger() {
   const btn = document.getElementById('hamburger');
   const nav = document.getElementById('global-nav');
   const ov  = document.getElementById('nav-overlay');
   if (!btn || !nav || !ov) return;
-  const open  = () => { nav.classList.add('open'); ov.classList.add('active'); btn.setAttribute('aria-expanded','true');  document.body.style.overflow='hidden'; };
-  const close = () => { nav.classList.remove('open'); ov.classList.remove('active'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; };
-  btn.addEventListener('click', () => btn.getAttribute('aria-expanded')==='true' ? close() : open());
+  const open  = () => { nav.classList.add('open'); ov.classList.add('active'); btn.setAttribute('aria-expanded', 'true');  document.body.style.overflow = 'hidden'; };
+  const close = () => { nav.classList.remove('open'); ov.classList.remove('active'); btn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; };
+  btn.addEventListener('click', () => btn.getAttribute('aria-expanded') === 'true' ? close() : open());
   ov.addEventListener('click', close);
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
-  document.addEventListener('keydown', e => e.key==='Escape' && close());
+  document.addEventListener('keydown', e => e.key === 'Escape' && close());
 }
 function setupBackToTop() {
   const btn = document.getElementById('back-to-top');
   if (!btn) return;
-  window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 400), { passive:true });
-  btn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+  window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 400), { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
 /* ================================================
@@ -285,30 +309,22 @@ async function init() {
   setupHamburger();
   setupBackToTop();
   setupRevealObserver();
+  setupRegisterForm();
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  const data = await loadData();
-  if (!data) {
-    ['news-list','schedule-list','recruit-content'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = '<p class="error-msg">データを読み込めませんでした。</p>';
-    });
-    return;
-  }
-
+  const [stat, live] = await Promise.all([loadStaticData(), loadLiveData()]);
   const newsEl     = document.getElementById('news-list');
   const scheduleEl = document.getElementById('schedule-list');
   const recruitEl  = document.getElementById('recruit-content');
-  if (newsEl)     renderNews(data.news, newsEl);
-  if (scheduleEl) renderSchedule(data.schedule, scheduleEl);
-  if (recruitEl)  renderRecruit(data.recruit, recruitEl);
 
-  setupRegisterForm();
+  // お知らせ・スケジュールはGASを優先、取れなければ data.json
+  const news     = live ? live.news     : stat?.news;
+  const schedule = live ? live.schedule : stat?.schedule;
+  if (newsEl)     (news     ? renderNews(news, newsEl)         : newsEl.innerHTML     = '<p class="error-msg">お知らせを読み込めませんでした。</p>');
+  if (scheduleEl) (schedule ? renderSchedule(schedule, scheduleEl) : scheduleEl.innerHTML = '<p class="error-msg">スケジュールを読み込めませんでした。</p>');
+  if (recruitEl)  renderRecruit(stat?.recruit, recruitEl);
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
